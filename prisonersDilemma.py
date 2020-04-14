@@ -40,10 +40,23 @@ class Game:
                         player1.PAYOUTS.append(gameInstance.OUTCOMES.get("DD")[0])
                         player2.PAYOUTS.append(gameInstance.OUTCOMES.get("DD")[1])
 
-                    if isinstance(player1, Game.T4T):
+                    if isinstance(player1, Game.T4T) or isinstance(player1, Game.Grudger):
                         player1.OPPONENT_MOVES.append(p2Action)
-                    elif isinstance(player2, Game.T4T):
+                    elif isinstance(player2, Game.T4T) or isinstance(player2, Game.Grudger):
                         player2.OPPONENT_MOVES.append(p1Action)
+                
+                if isinstance(self.PLAYERS[i], Game.T4T):
+                    self.PLAYERS[i].OPPONENT_MOVES = list()
+                    self.PLAYERS[i].CURR_ROUND = 0
+                elif isinstance(self.PLAYERS[i], Game.Grudger):
+                    self.PLAYERS[i].OPPONENT_MOVES = list()
+
+                if isinstance(self.PLAYERS[j], Game.T4T):
+                    self.PLAYERS[j].OPPONENT_MOVES = list()
+                    self.PLAYERS[j].CURR_ROUND = 0
+                elif isinstance(self.PLAYERS[j], Game.Grudger):
+                    self.PLAYERS[j].OPPONENT_MOVES = list()
+
     
     class GameInstance:
         ACTIONS = {"Cooperate": "C", "Defect": "D"}
@@ -79,10 +92,10 @@ class Game:
             super().__init__()
         
         def play(self):
-            if self.CURR_ROUND == 0:
-                return Game.GameInstance.ACTIONS.get("Cooperate")
-            return self.OPPONENT_MOVES[len(self.OPPONENT_MOVES)-1]
             self.CURR_ROUND += 1
+            if self.CURR_ROUND == 1 or len(self.OPPONENT_MOVES) == 0:
+                return Game.GameInstance.ACTIONS.get("Cooperate")
+            return self.OPPONENT_MOVES[self.CURR_ROUND-2]
 
         def getClass(self):
             return "Tit-4-Tat"
@@ -99,11 +112,10 @@ class Game:
             super().__init__()
 
         def play(self):
-            if len(self.OPPONENT_MOVES) > 0:
-                if self.OPPONENT_MOVES[len(self.OPPONENT_MOVES)-1] == "D":
-                    return "D"
+            if len(self.OPPONENT_MOVES) > 0 and "D" in self.OPPONENT_MOVES:
+                return Game.GameInstance.ACTIONS.get("Defect")
             else:
-                return "C"
+                return Game.GameInstance.ACTIONS.get("Cooperate")
 
         def getClass(self):
             return "Grudger"
@@ -142,8 +154,8 @@ class Game:
 
 
 if __name__ == "__main__":
-    n = 4
-    m = 2
+    n = 12
+    m = 4
     game = Game(n, m)
     print("Game initialized with " + str(n) + " players and " + str(m) + " rounds")
     for player in game.PLAYERS:
