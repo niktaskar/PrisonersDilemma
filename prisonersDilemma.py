@@ -303,6 +303,7 @@ def createGraph(scores, i):
     plt.bar(range(len(typeScoreDict)), list(typeScoreDict.values()), align='center')
     plt.xticks(range(len(typeScoreDict)), list(typeScoreDict.keys()))
     plt.savefig("PD_graphs/generation_" + str(i) + ".png")
+    plt.clf()
 
 
 def countTypes(scores):
