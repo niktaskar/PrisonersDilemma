@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from queue import PriorityQueue
 
 class Game:
 
@@ -9,11 +10,11 @@ class Game:
 
     def generatePlayers(self):
         for i in range(self.NUM_PLAYERS):
-            if i%4 is 0:
+            if i%4 is 2:
                 self.PLAYERS.append(Game.T4T())
             elif i%4 is 1:
                 self.PLAYERS.append(Game.Grudger())
-            elif i%4 is 2:
+            elif i%4 is 0:
                 self.PLAYERS.append(Game.AC())
             else:
                 self.PLAYERS.append(Game.AD())
@@ -62,63 +63,111 @@ class Game:
 
     def replacePlayers(self, p, scoreList, scores):
         count = int((len(scoreList)*p)/100)
-        print("Low Value: " + str(scoreList[int(count)-1]) + "\t High Value: " + str(scoreList[len(scoreList)-int(count)]))
+
         players = self.PLAYERS
         self.PLAYERS = list()
-        toAddAgain = set()
+
+        pq = PriorityQueue()
+        toAddAgain = []
         for key in scores:
-            for i in range(count, len(scoreList)):
-                if scores.get(key) == scoreList[i]:
-                    if i > len(scoreList) - count:
-                        print("HIGH VALUES" + str(key))
-                        if key.__contains__("Tit-4-Tat"):
-                            player = Game.T4T()
-                        elif key.__contains__("Grudger"):
-                            player = Game.Grudger()
-                        elif key.__contains__("Always Cooperate"):
-                            player = Game.AC()
-                        else:
-                            player = Game.AD()
-                        
-                        if len(self.PLAYERS) < self.NUM_PLAYERS:
-                            self.PLAYERS.append(player)
+            if key.__contains__("Tit-4-Tat"):
+                player = Game.T4T()
+            elif key.__contains__("Grudger"):
+                player = Game.Grudger()
+            elif key.__contains__("Always Cooperate"):
+                player = Game.AC()
+            else:
+                player = Game.AD()
+            
 
-                        # if isinstance(player, Game.T4T) and Game.T4T not in toAddAgain:
-                        #     toAddAgain.add(Game.T4T)
-                        # elif isinstance(player, Game.Grudger) and Game.Grudger not in toAddAgain:
-                        #     toAddAgain.add(Game.Grudger)
-                        # elif isinstance(player, Game.AC) and Game.AC not in toAddAgain:
-                        #     toAddAgain.add(Game.AC)
-                        # elif isinstance(player, Game.AD) and Game.AD not in toAddAgain:
-                        #     toAddAgain.add(Game.AD)
+            pq.put((Game.PlayerScore(player, scores.get(key)), scores.get(key)))
+
+        temp = count
+        middleVals = len(scores) - 2*count
+        while not pq.empty():
+            while temp > 0:
+                pq.get()
+                temp -= 1
+            while middleVals > 0:
+                player, value = pq.get()
+                pl = player.playerType.getClass()
+                if pl.__contains__("Tit-4-Tat"):
+                    newPlayer = Game.T4T()
+                elif pl.__contains__("Grudger"):
+                    newPlayer = Game.Grudger()
+                elif pl.__contains__("Always Cooperate"):
+                    newPlayer = Game.AC()
+                else:
+                    newPlayer = Game.AD()
+
+                self.PLAYERS.append(newPlayer)
+                middleVals -= 1
+            while count > 0:
+                player, value = pq.get()
+                pl = player.playerType.getClass()
+                if pl.__contains__("Tit-4-Tat"):
+                    newPlayer = Game.T4T()
+                elif pl.__contains__("Grudger"):
+                    newPlayer = Game.Grudger()
+                elif pl.__contains__("Always Cooperate"):
+                    newPlayer = Game.AC()
+                else:
+                    newPlayer = Game.AD()
+
+                self.PLAYERS.append(newPlayer)
+                if pl not in toAddAgain:    
+                    toAddAgain.append(pl)
+                count -= 1
+            
+            i = 0
+            while len(self.PLAYERS) < len(players):
+                if i % len(toAddAgain) == 0:
+                    if toAddAgain[i] ==  "Tit-4-Tat":
+                        newPlayer = Game.T4T()
+                    elif toAddAgain[i] == "Grudger":
+                        newPlayer = Game.Grudger()
+                    elif toAddAgain[i] == "Always Cooperate":
+                        newPlayer = Game.AC()
                     else:
-                        print("MIDDLE VALUES")
-                        if key.__contains__("Tit-4-Tat"):
-                            player = Game.T4T()
-                        elif key.__contains__("Grudger"):
-                            player = Game.Grudger()
-                        elif key.__contains__("Always Cooperate"):
-                            player = Game.AC()
-                        else:
-                            player = Game.AD()
-                        
-                        if len(self.PLAYERS) < self.NUM_PLAYERS:
-                            self.PLAYERS.append(player)
-        
-        print(toAddAgain)
-        # for i in range(self.NUM_PLAYERS-len(self.PLAYERS)):
-        #     if i % toAddAgain.count == 0:
-        #         self.PLAYERS.append(toAddAgain[0])
-        #     elif i % len(toAddAgain) == 1:
-        #         self.PLAYERS.append(toAddAgain[1])
-        #     elif i % len(toAddAgain) == 2:
-        #         self.PLAYERS.append(toAddAgain[2])
-        #     else:
-        #         self.PLAYERS.append(toAddAgain[3])
+                        newPlayer = Game.AD()
+                    self.PLAYERS.append(newPlayer)
+                elif i % len(toAddAgain) == 1:
+                    if toAddAgain[i] ==  "Tit-4-Tat":
+                        newPlayer = Game.T4T()
+                    elif toAddAgain[i] == "Grudger":
+                        newPlayer = Game.Grudger()
+                    elif toAddAgain[i] == "Always Cooperate":
+                        newPlayer = Game.AC()
+                    else:
+                        newPlayer = Game.AD()
+                    self.PLAYERS.append(newPlayer)
+                elif i % len(toAddAgain) == 2:
+                    if toAddAgain[i] ==  "Tit-4-Tat":
+                        newPlayer = Game.T4T()
+                    elif toAddAgain[i] == "Grudger":
+                        newPlayer = Game.Grudger()
+                    elif toAddAgain[i] == "Always Cooperate":
+                        newPlayer = Game.AC()
+                    else:
+                        newPlayer = Game.AD()
+                    self.PLAYERS.append(newPlayer)
+                elif i % len(toAddAgain) == 3:
+                    if toAddAgain[i] ==  "Tit-4-Tat":
+                        newPlayer = Game.T4T()
+                    elif toAddAgain[i] == "Grudger":
+                        newPlayer = Game.Grudger()
+                    elif toAddAgain[i] == "Always Cooperate":
+                        newPlayer = Game.AC()
+                    else:
+                        newPlayer = Game.AD()
+                    self.PLAYERS.append(newPlayer)
 
-        print()
-        
-    
+
+    '''
+        GameInstance class that holds data corresponding to results of games
+        Defines actions that each player can take
+        Returns payouts to each player depending on the move played
+    '''
     class GameInstance:
         ACTIONS = {"Cooperate": "C", "Defect": "D"}
         OUTCOMES = {"CC": [3,3], "DC": [5,0], "DD": [1,1], "CD": [0,5]}
@@ -136,6 +185,25 @@ class Game:
         if len(args)  != 0:
             self.NUM_PLAYERS = args[0]
             self.NUM_ROUNDS = args[1]
+
+    '''
+        PlayerScore class
+        Class to encapsulate score and strategy data for each player
+        Used in replacePlayers method in order to provide PriorityQueue with comparator
+    '''
+    class PlayerScore:
+        playerType = None
+        score = 0
+
+        def __init__(self, playerType, score):
+            self.score = score
+            self.playerType = playerType
+        
+        def toString(self):
+            return str(self.playerType.getClass()) + ": " + str(self.score)
+
+        def __lt__(self, value):
+                return self.score < value.score
 
 
     '''
@@ -216,6 +284,9 @@ class Game:
             return "Always Defect"
 
 
+'''
+    Creates bar graphs and saves them in relevant folder
+'''
 def createGraph(scores, i):
     typeScoreDict = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
     for key in scores:
@@ -228,18 +299,38 @@ def createGraph(scores, i):
         else:
             typeScoreDict["AD"] += scores.get(key)
 
-    print(str(typeScoreDict))
 
     plt.bar(range(len(typeScoreDict)), list(typeScoreDict.values()), align='center')
     plt.xticks(range(len(typeScoreDict)), list(typeScoreDict.keys()))
     plt.savefig("PD_graphs/generation_" + str(i) + ".png")
 
 
+def countTypes(scores):
+    typeCount = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
+    for key in scores:
+        if key.__contains__("Tit-4-Tat"):
+            typeCount["Tit-4-Tat"] += 1
+        elif key.__contains__("Grudger"):
+            typeCount["Grudger"] += 1
+        elif key.__contains__("Cooperate"):
+            typeCount["AC"] += 1
+        else:
+            typeCount["AD"] += 1
+
+    print(str(typeCount))
+
+    numPlayers = 0
+    for key in scores:
+        numPlayers += 1
+    percentCount = [100*typeCount.get(key)/numPlayers for key in typeCount]
+    print(percentCount)
+
+
 if __name__ == "__main__":
-    n = 4
+    n = 100
     m = 5
-    p = 25
-    k = 3
+    p = 5
+    k = 20
     previous = Game()
     game = Game(n, m)
     game.generatePlayers()
@@ -248,11 +339,12 @@ if __name__ == "__main__":
     game.runGames()
 
     scores = {str(game.PLAYERS[i].getClass()+"-"+str(i)): sum(game.PLAYERS[i].PAYOUTS) for i in range(len(game.PLAYERS))}
-    print("SCORES: " + str(scores))
+    # print("SCORES: " + str(scores))
     scoreList = [scores.get(val) for val in scores]
     scoreList.sort()
-    print("SCORELIST: " + str(scoreList))
+    # print("SCORELIST: " + str(scoreList))
 
+    countTypes(scores)
     createGraph(scores, 0)
     game.replacePlayers(p, scoreList, scores)
     scores = {}
@@ -262,13 +354,15 @@ if __name__ == "__main__":
         print("NUMBER OF PLAYERS IN ROUND " + str(i) + ": " + str(len(game.PLAYERS)))
 
         game.runGames()
-        createGraph(scores, i)
 
         scores = {str(game.PLAYERS[i].getClass()+"-"+str(i)): sum(game.PLAYERS[i].PAYOUTS) for i in range(len(game.PLAYERS))}
-        print("SCORES: " + str(scores))
+        # print("SCORES: " + str(scores))
         scoreList = [scores.get(val) for val in scores]
         scoreList.sort()
-        print("SCORELIST: " + str(scoreList))
+        # print("SCORELIST: " + str(scoreList))
+        countTypes(scores)
+        createGraph(scores, i)
+
         game.replacePlayers(p, scoreList, scores)
         scores = {}
         scoreList = []
