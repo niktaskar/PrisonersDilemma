@@ -21,6 +21,52 @@ class Game:
                 self.PLAYERS.append(Game.AD())
 
 
+    def distribution_1(self):
+        for i in range(self.NUM_PLAYERS):
+            if i%9 is 4 or i%9 is 5:
+                self.PLAYERS.append(Game.T4T())
+            elif i%9 is 2 or i%9 is 3:
+                self.PLAYERS.append(Game.AD())
+            elif i%9 is 1 or i%9 is 0:
+                self.PLAYERS.append(Game.Grudger())
+            else:
+                self.PLAYERS.append(Game.AC())      
+
+
+    def distribution_2(self):
+        for i in range(self.NUM_PLAYERS):
+            if i%3 is 1:
+                self.PLAYERS.append(Game.Grudger())
+            elif i%3 is 2:
+                self.PLAYERS.append(Game.T4T())
+            else:
+                self.PLAYERS.append(Game.AD())
+
+
+    def distribution_3(self):
+        for i in range(self.NUM_PLAYERS):
+            if i%5 is 2 or i%5 is 3:
+                self.PLAYERS.append(Game.T4T())
+            # elif i%10 is 1:
+            #     self.PLAYERS.append(Game.Grudger())
+            elif i%5 is 0 or i%5 is 1:
+                self.PLAYERS.append(Game.AD())
+            else:
+                self.PLAYERS.append(Game.AC())
+
+
+    def variable_p(self):
+        for i in range(self.NUM_PLAYERS):
+            if i%4 is 2:
+                self.PLAYERS.append(Game.AC())
+            elif i%4 is 1:
+                self.PLAYERS.append(Game.AD())
+            elif i%4 is 0:
+                self.PLAYERS.append(Game.T4T())
+            else:
+                self.PLAYERS.append(Game.Grudger())
+
+
     def runGames(self):
         for i in range(len(self.PLAYERS)):
             for j in range(i+1, len(self.PLAYERS)):
@@ -325,7 +371,7 @@ def createGraph(scores, i, game, m):
     # Plots total for each type of player
     plt.bar(range(len(typeScoreDict)), list(typeScoreDict.values()), align='center')
     plt.xticks(range(len(typeScoreDict)), list(typeScoreDict.keys()))
-    plt.savefig("PD_graphs/uniform/totalScore/generation_" + str(i) + ".png")
+    plt.savefig("PD_graphs/variable_p/pconstant1/totalScore/generation_" + str(i) + ".png")
     plt.clf()
 
     typeCount = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
@@ -346,7 +392,7 @@ def createGraph(scores, i, game, m):
 
     plt.bar(range(len(percentCount)), list(percentCount.values()), align='center')
     plt.xticks(range(len(percentCount)), list(percentCount.keys()))
-    plt.savefig("PD_graphs/uniform/percentPop/generation_" + str(i) + ".png")
+    plt.savefig("PD_graphs/variable_p/pconstant1/percentPop/generation_" + str(i) + ".png")
     plt.clf()
 
     averageTypeScore = {}
@@ -359,10 +405,10 @@ def createGraph(scores, i, game, m):
             averageTypeScore[key] = typeScoreDict.get(key)/(game.NUM_PLAYED.get(key)*typeCount.get(key))
         else: 
             averageTypeScore[key] = 0
-
+    print("Average payout/move for each type: " + str(averageTypeScore) + "\n")
     plt.bar(range(len(averageTypeScore)), list(averageTypeScore.values()), align='center')
     plt.xticks(range(len(averageTypeScore)), list(averageTypeScore.keys()))
-    plt.savefig("PD_graphs/uniform/averageScore/generation_" + str(i) + ".png")
+    plt.savefig("PD_graphs/variable_p/pconstant1/averageScore/generation_" + str(i) + ".png")
     plt.clf()
 
 
@@ -378,23 +424,28 @@ def countTypes(scores):
         else:
             typeCount["AD"] += 1
 
-    print(str(typeCount))
+    print("Number of players/type: " + str(typeCount))
 
     numPlayers = 0
     for key in scores:
         numPlayers += 1
     percentCount = [100*typeCount.get(key)/numPlayers for key in typeCount]
-    print(percentCount)
+    print("Percent of players/type: " + str(percentCount))
 
 
 if __name__ == "__main__":
     n = 100
     m = 5
-    p = 5
+    # p = 5
+    p = 1
     k = 20
     previous = Game()
     game = Game(n, m)
-    game.generatePlayers()
+    # game.generatePlayers()
+    # game.distribution_1()
+    # game.distribution_2()
+    # game.distribution_3()
+    game.variable_p()
 
     print("NUMBER OF PLAYERS IN ROUND 0: " + str(len(game.PLAYERS)))
     game.runGames()
@@ -408,11 +459,8 @@ if __name__ == "__main__":
     countTypes(scores)
     createGraph(scores, 0, game, m)
     game.NUM_PLAYED = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
-    total_payouts = 0
     for player in game.PLAYERS:
-        total_payouts += len(player.PAYOUTS)
         player.PAYOUTS.clear()
-    print(total_payouts)
     game.replacePlayers(p, scoreList, scores)
     scores = {}
     scoreList = []
@@ -431,12 +479,9 @@ if __name__ == "__main__":
 
         createGraph(scores, i, game, m)
         game.NUM_PLAYED = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
-        total_payouts = 0
         for player in game.PLAYERS:
-            total_payouts += len(player.PAYOUTS)
             player.PAYOUTS.clear()
-        print(total_payouts)
-        
+        # p +=1
         game.replacePlayers(p, scoreList, scores)
         scores = {}
         scoreList = []
