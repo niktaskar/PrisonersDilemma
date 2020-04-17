@@ -7,6 +7,7 @@ class Game:
     PLAYERS = list()
     PREV_GAMES = {}
     NUM_ROUNDS = 0
+    NUM_PLAYED = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
 
     def generatePlayers(self):
         for i in range(self.NUM_PLAYERS):
@@ -25,7 +26,25 @@ class Game:
             for j in range(i+1, len(self.PLAYERS)):
                 for turn in range(self.NUM_ROUNDS):
                     player1 = self.PLAYERS[i]
+                    if isinstance(player1, self.T4T):
+                        self.NUM_PLAYED["Tit-4-Tat"] +=1
+                    elif isinstance(player1, self.Grudger):
+                        self.NUM_PLAYED["Grudger"] +=1
+                    elif isinstance(player1, self.AC):
+                        self.NUM_PLAYED["AC"] +=1
+                    else:
+                        self.NUM_PLAYED["AD"] +=1
+
                     player2 = self.PLAYERS[j]
+                    if isinstance(player2, self.T4T):
+                        self.NUM_PLAYED["Tit-4-Tat"] +=1
+                    elif isinstance(player2, self.Grudger):
+                        self.NUM_PLAYED["Grudger"] +=1
+                    elif isinstance(player2, self.AC):
+                        self.NUM_PLAYED["AC"] +=1
+                    else:
+                        self.NUM_PLAYED["AD"] +=1
+
                     gameInstance = Game.GameInstance(player1, player2)
                     p1Action = gameInstance.player1.play()
                     p2Action = gameInstance.player2.play()
@@ -287,8 +306,9 @@ class Game:
 '''
     Creates bar graphs and saves them in relevant folder
 '''
-def createGraph(scores, i):
+def createGraph(scores, i, game, m):
     typeScoreDict = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
+    total = 0
     for key in scores:
         if key.__contains__("Tit-4-Tat"):
             typeScoreDict["Tit-4-Tat"] += scores.get(key)
@@ -298,11 +318,51 @@ def createGraph(scores, i):
             typeScoreDict["AC"] += scores.get(key)
         else:
             typeScoreDict["AD"] += scores.get(key)
+        total += scores.get(key)
 
+    print("Scores for each type of player: " + str(typeScoreDict) + " Total:" + str(total))
 
+    # Plots total for each type of player
     plt.bar(range(len(typeScoreDict)), list(typeScoreDict.values()), align='center')
     plt.xticks(range(len(typeScoreDict)), list(typeScoreDict.keys()))
-    plt.savefig("PD_graphs/generation_" + str(i) + ".png")
+    plt.savefig("PD_graphs/uniform/totalScore/generation_" + str(i) + ".png")
+    plt.clf()
+
+    typeCount = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
+    for key in scores:
+        if key.__contains__("Tit-4-Tat"):
+            typeCount["Tit-4-Tat"] += 1
+        elif key.__contains__("Grudger"):
+            typeCount["Grudger"] += 1
+        elif key.__contains__("Cooperate"):
+            typeCount["AC"] += 1
+        else:
+            typeCount["AD"] += 1
+
+    numPlayers = 0
+    for key in scores:
+        numPlayers += 1
+    percentCount = {key: 100*typeCount.get(key)/numPlayers for key in typeCount}
+
+    plt.bar(range(len(percentCount)), list(percentCount.values()), align='center')
+    plt.xticks(range(len(percentCount)), list(percentCount.keys()))
+    plt.savefig("PD_graphs/uniform/percentPop/generation_" + str(i) + ".png")
+    plt.clf()
+
+    averageTypeScore = {}
+    # each player plays n-1 times
+    # there are typeCount.get(key) players like that
+    # and they will play each other typeCount.get(key)*typeCount.get(key)-1
+    # all times m for the number of rounds they play per opponent
+    for key in typeCount:
+        if game.NUM_PLAYED.get(key) > 0: 
+            averageTypeScore[key] = typeScoreDict.get(key)/(game.NUM_PLAYED.get(key)*typeCount.get(key))
+        else: 
+            averageTypeScore[key] = 0
+
+    plt.bar(range(len(averageTypeScore)), list(averageTypeScore.values()), align='center')
+    plt.xticks(range(len(averageTypeScore)), list(averageTypeScore.keys()))
+    plt.savefig("PD_graphs/uniform/averageScore/generation_" + str(i) + ".png")
     plt.clf()
 
 
@@ -346,7 +406,13 @@ if __name__ == "__main__":
     # print("SCORELIST: " + str(scoreList))
 
     countTypes(scores)
-    createGraph(scores, 0)
+    createGraph(scores, 0, game, m)
+    game.NUM_PLAYED = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
+    total_payouts = 0
+    for player in game.PLAYERS:
+        total_payouts += len(player.PAYOUTS)
+        player.PAYOUTS.clear()
+    print(total_payouts)
     game.replacePlayers(p, scoreList, scores)
     scores = {}
     scoreList = []
@@ -362,8 +428,15 @@ if __name__ == "__main__":
         scoreList.sort()
         # print("SCORELIST: " + str(scoreList))
         countTypes(scores)
-        createGraph(scores, i)
 
+        createGraph(scores, i, game, m)
+        game.NUM_PLAYED = {"Tit-4-Tat": 0, "Grudger": 0, "AC": 0, "AD": 0}
+        total_payouts = 0
+        for player in game.PLAYERS:
+            total_payouts += len(player.PAYOUTS)
+            player.PAYOUTS.clear()
+        print(total_payouts)
+        
         game.replacePlayers(p, scoreList, scores)
         scores = {}
         scoreList = []
